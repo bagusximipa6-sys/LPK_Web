@@ -1,6 +1,6 @@
 # Yumenari Global
 
-Landing page responsif untuk informasi persiapan kerja dan program ke Jepang serta Korea.
+Landing page responsif untuk persiapan kerja dan program ke Jepang.
 
 ## Menjalankan
 
@@ -11,9 +11,23 @@ npm run dev
 
 Pemeriksaan produksi: `npm run build`. Pemeriksaan gaya kode: `npm run lint`.
 
+## Pendaftaran siswa dan deployment Vercel
+
+Data pendaftaran disimpan di PostgreSQL melalui fungsi serverless `api/students.ts`. Fungsi memverifikasi bearer token Clerk di server dan membatasi akses data ke `userId` dari token. Browser tidak mengakses database atau secret key secara langsung.
+
+1. Jalankan `database/schema.sql` satu kali pada database PostgreSQL untuk membuat tabel `yumenari_students`.
+2. Tambahkan environment variables berikut di Vercel untuk setiap environment yang digunakan:
+  - `VITE_CLERK_PUBLISHABLE_KEY` untuk client Clerk.
+  - `CLERK_SECRET_KEY` untuk verifikasi sesi server.
+  - `DATABASE_URL` atau `POSTGRES_URL` untuk koneksi PostgreSQL. API juga mengenali `POSTGRES_PRISMA_URL` dan `POSTGRES_URL_NON_POOLING`.
+3. Isi environment variables yang sama pada `.env.local` untuk development. Jangan commit file environment atau mengirim nilainya lewat chat.
+4. Redeploy project setelah SQL schema dan environment variables siap.
+
+URL PostgreSQL dan secret Clerk adalah konfigurasi server-only, kecuali publishable key Clerk yang memang digunakan di client. Tabel menyimpan satu pendaftaran per akun Clerk.
+
 ## Konten dan aset
 
-Teks, FAQ, pilihan program, jadwal, detail kontak, URL WhatsApp, dan aset hero berada di `src/content/site.ts`. Ganti placeholder dalam file tersebut sebelum publikasi. Sampai nomor WhatsApp resmi dimasukkan, CTA konsultasi menuju bagian kontak.
+Teks, FAQ, pilihan program, jadwal, detail kontak, URL WhatsApp, dan aset hero berada di `src/content/site.ts`.
 
 Letakkan logo asli tanpa mengubah artwork di `public/images/logo-gakkou.png` dan `public/images/logo-ygi.png`. Logo navbar dipilih lewat konstanta `NAVBAR_LOGO`; logo footer memakai `FOOTER_LOGO`. Jika file belum tersedia, halaman menampilkan placeholder.
 

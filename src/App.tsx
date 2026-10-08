@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Show, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/react'
+import { Show, SignInButton, SignUpButton, UserButton, useAuth, useUser } from '@clerk/react'
 import {
   ArrowDown,
   ArrowRight,
@@ -38,15 +38,44 @@ const emptyRegistration: StudentRegistration = {
 }
 
 function StudentAccountArea({ user }: { user: NonNullable<ReturnType<typeof useUser>['user']> }) {
-  const storedRegistration = user.unsafeMetadata.studentRegistration as StudentRegistration | undefined
-  const [registration, setRegistration] = useState<StudentRegistration>(() => ({
-    ...emptyRegistration,
-    ...storedRegistration,
-    fullName: storedRegistration?.fullName ?? user.fullName ?? '',
-  }))
-  const [savedRegistration, setSavedRegistration] = useState<StudentRegistration | null>(storedRegistration ?? null)
+  const { getToken } = useAuth()
+  const [registration, setRegistration] = useState<StudentRegistration>({ ...emptyRegistration, fullName: user.fullName ?? '' })
+  const [savedRegistration, setSavedRegistration] = useState<StudentRegistration | null>(null)
   const [savingRegistration, setSavingRegistration] = useState(false)
+  const [loadingRegistration, setLoadingRegistration] = useState(true)
   const [registrationMessage, setRegistrationMessage] = useState('')
+
+  useEffect(() => {
+    let active = true
+
+    const loadStudent = async () => {
+      try {
+        const token = await getToken()
+        if (!token) throw new Error('Authentication required')
+
+        const response = await fetch('/api/students', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!response.ok) {
+          const failure = await response.json().catch(() => ({})) as { error?: string }
+          throw new Error(failure.error || site.ui.registrationLoadError)
+        }
+
+        const result = await response.json() as { student: StudentRegistration | null }
+        if (active && result.student) {
+          setRegistration(result.student)
+          setSavedRegistration(result.student)
+        }
+      } catch (error) {
+        if (active) setRegistrationMessage(error instanceof Error ? error.message : site.ui.registrationLoadError)
+      } finally {
+        if (active) setLoadingRegistration(false)
+      }
+    }
+
+    void loadStudent()
+    return () => { active = false }
+  }, [getToken])
 
   const handleRegistrationChange = (field: keyof StudentRegistration, value: string) => {
     setRegistration((current) => ({ ...current, [field]: value }))
@@ -57,16 +86,28 @@ function StudentAccountArea({ user }: { user: NonNullable<ReturnType<typeof useU
     setSavingRegistration(true)
     setRegistrationMessage('')
     try {
-      await user.update({
-        unsafeMetadata: {
-          ...user.unsafeMetadata,
-          studentRegistration: registration,
+      const token = await getToken()
+      if (!token) throw new Error('Authentication required')
+
+      const response = await fetch('/api/students', {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify(registration),
       })
-      setSavedRegistration(registration)
+      if (!response.ok) {
+        const failure = await response.json().catch(() => ({})) as { error?: string }
+        throw new Error(failure.error || site.ui.registrationError)
+      }
+
+      const result = await response.json() as { student: StudentRegistration }
+      setRegistration(result.student)
+      setSavedRegistration(result.student)
       setRegistrationMessage(site.ui.registrationSaved)
-    } catch {
-      setRegistrationMessage(site.ui.registrationError)
+    } catch (error) {
+      setRegistrationMessage(error instanceof Error ? error.message : site.ui.registrationError)
     } finally {
       setSavingRegistration(false)
     }
@@ -80,6 +121,7 @@ function StudentAccountArea({ user }: { user: NonNullable<ReturnType<typeof useU
           <h2 className="section-heading">{site.ui.registrationTitle}</h2>
           <p>{site.ui.registrationDescription}</p>
           <span>{site.ui.registrationPrivacy}</span>
+          {loadingRegistration && <span>{site.ui.loadingStudentData}</span>}
         </div>
         <form className="registration-form" onSubmit={handleRegistrationSubmit}>
           <label>
@@ -120,7 +162,7 @@ function StudentAccountArea({ user }: { user: NonNullable<ReturnType<typeof useU
             <textarea required rows={3} autoComplete="street-address" value={registration.address} onChange={(event) => handleRegistrationChange('address', event.target.value)} />
           </label>
           <div className="registration-actions registration-wide">
-            <button className="button button-primary" type="submit" disabled={savingRegistration}>
+            <button className="button button-primary" type="submit" disabled={savingRegistration || loadingRegistration}>
               {savingRegistration ? site.ui.savingRegistration : savedRegistration ? site.ui.updateRegistration : site.ui.saveRegistration}
             </button>
             {registrationMessage && <p role="status">{registrationMessage}</p>}
