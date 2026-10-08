@@ -1,12 +1,13 @@
 export const NAVBAR_LOGO = [
   { src: '/images/image1.jpg', alt: 'Logo PT Yumenari Global Indonesia' },
   { src: '/images/image2.jpg', alt: 'Logo LPKS Yumenari Gakkou' },
+  { src: '/images/image3.jpg', alt: 'Logo Daewon' },
 ]
 export const FOOTER_LOGO = '/images/image1.jpg'
 
 export const site = {
   brand: {
-    name: 'YUMENARI GLOBAL',
+    name: 'YUMENARI GLOBAL INDONESIA',
     legalName: 'PT Yumenari Global Indonesia',
     tagline: 'Persiapkan Diri, Raih Peluang Global',
   },
@@ -16,6 +17,11 @@ export const site = {
     { label: 'Artikel dan Informasi', href: '#artikel-informasi' },
     { label: 'Kerja Sama', href: '#kerja-sama' },
     { label: 'Kontak', href: '#kontak' },
+    {
+      label: 'Keuangan',
+      href: '#keuangan',
+      children: ['Cabang Purwodadi', 'Cabang Demak', 'Cabang Wirosari', 'Yumenari Global'],
+    },
   ],
   anchors: {
     home: '#beranda',
@@ -35,6 +41,7 @@ export const site = {
     openMenu: 'Buka menu',
     closeMenu: 'Tutup menu',
     mainNavigation: 'Navigasi utama',
+    openFinanceMenu: 'Buka pilihan unit keuangan',
     signIn: 'Masuk',
     signUp: 'Daftar',
     registration: 'Pendaftaran',
@@ -96,10 +103,10 @@ export const site = {
     primaryCta: 'Konsultasi Sekarang',
     secondaryCta: 'Jelajahi Program',
     image: {
-      src: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1400&q=85',
-      alt: 'Suasana jalan di Kyoto, Jepang',
-      caption: 'Jepang',
-      detail: 'Mulai dari bahasa, lanjut ke persiapan kerja.',
+      src: '/images/logo.jpg',
+      alt: 'Poster program persiapan kerja ke Jepang dan Korea',
+      caption: '',
+      detail: '',
     },
     destinations: ['JEPANG'],
   },
@@ -171,6 +178,10 @@ export const site = {
     eyebrow: 'SUASANA KEGIATAN',
     title: 'Belajar dan mempersiapkan langkah berikutnya.',
     description: 'Informasi kegiatan belajar Yumenari Global akan ditampilkan di sini.',
+    learningImage: {
+      src: '/images/belajar.jpg',
+      alt: 'Kegiatan belajar bahasa Jepang',
+    },
     placeholders: [
       'Foto kegiatan belajar bahasa',
       'Foto kegiatan persiapan interview',

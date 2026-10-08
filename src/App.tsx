@@ -196,6 +196,8 @@ function StudentAccountArea({ user }: { user: NonNullable<ReturnType<typeof useU
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [financeMenuOpen, setFinanceMenuOpen] = useState(false)
+  const [selectedFinanceUnit, setSelectedFinanceUnit] = useState<string | null>(null)
   const [activeFaq, setActiveFaq] = useState<number | null>(0)
   const [scrolled, setScrolled] = useState(false)
   const { isLoaded, isSignedIn, user } = useUser()
@@ -240,6 +242,7 @@ function App() {
       <header className={`site-header${scrolled ? ' is-scrolled' : ''}`}>
         <div className="nav-wrap">
           <a className="brand-lockup" href={site.anchors.home} onClick={closeMenu} aria-label={site.brand.name}>
+            <span>{site.brand.name}</span>
             <span className="brand-logos">
               {NAVBAR_LOGO.map((logo) => (
                 <span className="brand-logo-slot" key={logo.src}>
@@ -248,7 +251,6 @@ function App() {
                 </span>
               ))}
             </span>
-            <span>{site.brand.name}</span>
           </a>
           <button
             type="button"
@@ -260,7 +262,38 @@ function App() {
             {menuOpen ? <X /> : <Menu />}
           </button>
           <nav className={`main-nav${menuOpen ? ' is-open' : ''}`} aria-label={site.ui.mainNavigation}>
-            {site.navigation.map((item) => (
+            {site.navigation.map((item) => 'children' in item ? (
+              <div className="nav-dropdown" key={item.href}>
+                <button
+                  type="button"
+                  className="nav-dropdown-trigger"
+                  aria-expanded={financeMenuOpen}
+                  aria-label={`${item.label}: ${site.ui.openFinanceMenu}`}
+                  onClick={() => setFinanceMenuOpen((open) => !open)}
+                >
+                  <span>{item.label}</span><ChevronDown aria-hidden="true" />
+                </button>
+                {financeMenuOpen && (
+                  <div className="nav-dropdown-menu">
+                    {item.children.map((unit) => (
+                      <button
+                        type="button"
+                        key={unit}
+                        className={selectedFinanceUnit === unit ? 'is-selected' : ''}
+                        aria-pressed={selectedFinanceUnit === unit}
+                        onClick={() => {
+                          setSelectedFinanceUnit(unit)
+                          setFinanceMenuOpen(false)
+                          closeMenu()
+                        }}
+                      >
+                        {unit}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
               <a key={item.href} href={item.href} onClick={closeMenu}>{item.label}</a>
             ))}
             {isLoaded && isSignedIn && <>
@@ -302,7 +335,7 @@ function App() {
                 <p>{site.brand.tagline}</p>
               </div>
             </div>
-            <div className="hero-visual" aria-label={site.hero.image.alt}>
+            <div className="hero-visual hero-visual-poster" aria-label={site.hero.image.alt}>
               <img src={site.hero.image.src} alt={site.hero.image.alt} />
               <div className="hero-image-shade" />
               <div className="visual-index"><span>{site.ui.logoPlaceholder}</span><span>{site.ui.imageIndex}</span></div>
@@ -379,7 +412,11 @@ function App() {
             <div className="activity-grid">
               {site.activities.placeholders.map((placeholder, index) => (
                 <div className={`activity-placeholder activity-placeholder-${index + 1} reveal`} key={placeholder}>
-                  <div className="activity-art" aria-hidden="true"><BookOpenText /><span>0{index + 1}</span></div>
+                  {index === 0 ? (
+                    <img className="activity-photo" src={site.activities.learningImage.src} alt={site.activities.learningImage.alt} />
+                  ) : (
+                    <div className="activity-art" aria-hidden="true"><BookOpenText /><span>0{index + 1}</span></div>
+                  )}
                   <p>{placeholder}</p>
                 </div>
               ))}
